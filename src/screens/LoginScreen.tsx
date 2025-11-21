@@ -6,17 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Image,
   ScrollView,
   SafeAreaView,
+  // Image is no longer needed for the Logo
 } from 'react-native';
+
+// 1. Import the SVG as a component
+import PokeballLogo from '../images/pokeball.svg'; 
+
 import {
   signInWithEmail,
   signInWithGoogle,
 } from '../api/authService';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-// We get the navigation prop from the RootNavigator
 type LoginScreenProps = NativeStackScreenProps<any, 'Login'>;
 
 const LoginScreen = ({ navigation }: LoginScreenProps) => {
@@ -53,12 +56,11 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Image
-          style={styles.logo}
-          source={{ uri: 'https://placehold.co/150x150/png?text=PokeBall' }}
-          resizeMode="contain"
-        />
-        <Text style={styles.title}>PokeExplorer</Text>
+        
+        {/* 2. Use the SVG component directly */}
+        <PokeballLogo width={150} height={150} style={styles.logo} />
+        
+        <Text style={styles.title}>Pokedex</Text>
 
         <TextInput
           style={styles.input}
@@ -81,14 +83,13 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         <TouchableOpacity
           style={styles.button}
           onPress={handleLogin}
-          disabled={loading} // Disable button when loading
+          disabled={loading}
         >
           <Text style={styles.buttonText}>LOG IN</Text>
         </TouchableOpacity>
 
         <View style={styles.divider} />
 
-        {/* THIS IS YOUR GOOGLE SIGNUP/LOGIN BUTTON */}
         <TouchableOpacity
           style={[styles.button, styles.googleButton]}
           onPress={handleGoogleLogin}
@@ -96,10 +97,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           <Text style={styles.buttonText}>Sign in with Google</Text>
         </TouchableOpacity>
 
-        {/* This is the new navigation link */}
         <TouchableOpacity
           style={styles.navLinkButton}
-          onPress={() => navigation.navigate('SignUp')} // Navigate to the new screen
+          onPress={() => navigation.navigate('SignUp')}
         >
           <Text style={styles.navLinkText}>Don't have an account? Sign Up</Text>
         </TouchableOpacity>
@@ -109,11 +109,10 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
   );
 };
 
-// Re-using the same styles, but adding navLink
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#373737ff',
   },
   container: {
     flexGrow: 1,
@@ -122,18 +121,18 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   logo: {
-    width: 150,
-    height: 150,
+    // Width and Height are handled by props in the component usually, 
+    // but margin is fine here.
     marginBottom: 20,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffffff',
     marginBottom: 30,
   },
   input: {
-    width: '100%',
+    width: '90%',
     height: 50,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -145,13 +144,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    width: '100%',
+    width: '60%',
     height: 50,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-    backgroundColor: '#e63946', // Pokemon Red
+    backgroundColor: '#e63946', 
   },
   buttonText: {
     color: '#fff',
@@ -165,14 +164,14 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   googleButton: {
-    backgroundColor: '#db4437', // Google Red
+    backgroundColor: '#db4437', 
   },
   navLinkButton: {
     marginTop: 20,
   },
   navLinkText: {
     fontSize: 16,
-    color: '#457b9d',
+    color: '#c8c8c8ff',
     fontWeight: '600',
   },
 });

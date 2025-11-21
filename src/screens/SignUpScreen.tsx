@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { signUpWithEmail } from '../api/authService';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import PokeballLogo from '../images/pokeball.svg'; 
 
 // We get the navigation prop from the RootNavigator
 type SignUpScreenProps = NativeStackScreenProps<any, 'SignUp'>;
@@ -41,11 +42,7 @@ const SignUpScreen = ({ navigation }: SignUpScreenProps) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Image
-          style={styles.logo}
-          source={{ uri: 'https://placehold.co/150x150/png?text=PokeBall' }}
-          resizeMode="contain"
-        />
+        <PokeballLogo width={150} height={150} style={styles.logo} />
         <Text style={styles.title}>Create Account</Text>
 
         <TextInput
@@ -88,7 +85,7 @@ const SignUpScreen = ({ navigation }: SignUpScreenProps) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#373737ff',
   },
   container: {
     flexGrow: 1,
@@ -104,11 +101,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffffff',
     marginBottom: 30,
   },
   input: {
-    width: '100%',
+    width: '90%',
     height: 50,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -120,12 +117,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    width: '100%',
+    width: '60%',
     height: 50,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
+    marginTop: 20
   },
   buttonText: {
     color: '#fff',
@@ -133,14 +131,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   signUpButton: {
-    backgroundColor: '#457b9d', // Water Blue
+    backgroundColor: '#e63946', // Water Blue
   },
   navLinkButton: {
     marginTop: 20,
   },
   navLinkText: {
     fontSize: 16,
-    color: '#457b9d',
+    color: '#c8c8c8ff',
     fontWeight: '600',
   },
 });

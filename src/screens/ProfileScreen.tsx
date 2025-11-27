@@ -9,14 +9,21 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  ScrollView,
+  Image,
+  Platform,   // <--- 1. Import Platform
+  StatusBar,  // <--- 2. Import StatusBar
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker'; 
 import { signOutUser } from '../api/authService';
 
 type UserProfile = {
   email: string;
   trainerName: string;
+  profilePicture?: string; 
   createdAt: string;
   badges: string[];
   discoveredPokemon: { [key: string]: any };
@@ -26,9 +33,9 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
-  // NEW: State for handling the Edit Modal
-  const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const currentUser = auth().currentUser;
 
@@ -39,7 +46,6 @@ const ProfileScreen = () => {
     }
 
     const userRef = database().ref(`/users/${currentUser.uid}`);
-
     const onValueChange = userRef.on('value', snapshot => {
       const profileData = snapshot.val();
       setUserProfile(profileData);
@@ -49,7 +55,10 @@ const ProfileScreen = () => {
     return () => userRef.off('value', onValueChange);
   }, [currentUser]);
 
+  // --- ACTIONS ---
+
   const handleSignOut = async () => {
+    setMenuVisible(false);
     try {
       await signOutUser();
     } catch (error) {
@@ -58,33 +67,65 @@ const ProfileScreen = () => {
     }
   };
 
-  // NEW: Function to open modal and pre-fill current name
   const openEditModal = () => {
+    setMenuVisible(false);
     if (userProfile?.trainerName) {
       setNewName(userProfile.trainerName);
     }
-    setModalVisible(true);
+    setEditModalVisible(true);
   };
 
-  // NEW: Function to update Firebase
   const handleUpdateName = async () => {
     if (!newName.trim()) {
       Alert.alert('Error', 'Trainer name cannot be empty');
       return;
     }
-
     if (!currentUser) return;
 
     try {
       await database().ref(`/users/${currentUser.uid}`).update({
         trainerName: newName.trim(),
       });
-      setModalVisible(false);
+      setEditModalVisible(false);
       Alert.alert('Success', 'Trainer Card updated!');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Could not update name.');
     }
+  };
+
+  const handleUpdateProfilePicture = () => {
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo',
+      quality: 0.5, 
+      includeBase64: true, 
+    };
+
+    launchImageLibrary(options, async (response) => {
+      if (response.didCancel) {
+        return;
+      } else if (response.errorCode) {
+        Alert.alert('Error', 'Image picker error: ' + response.errorMessage);
+        return;
+      }
+
+      if (response.assets && response.assets.length > 0) {
+        const selectedImage = response.assets[0];
+        const imageString = `data:${selectedImage.type};base64,${selectedImage.base64}`;
+        
+        if (currentUser) {
+          try {
+            await database().ref(`/users/${currentUser.uid}`).update({
+              profilePicture: imageString,
+            });
+            Alert.alert('Success', 'Profile picture updated!');
+          } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Could not save image.');
+          }
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -98,55 +139,100 @@ const ProfileScreen = () => {
   const discoveredCount = userProfile?.discoveredPokemon
     ? Object.keys(userProfile.discoveredPokemon).length
     : 0;
+  
+  const badgePlaceholders = Array(8).fill(0);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>My Profile</Text>
+    // 3. Changed SafeAreaView to normal View so background color bleeds to top
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        
+        {/* --- HEADER SECTION --- */}
+        <View style={styles.headerContainer}>
+          
+          <TouchableOpacity 
+            style={styles.menuIcon} 
+            onPress={() => setMenuVisible(true)}
+          >
+             <MaterialCommunityIcons name="dots-horizontal" size={30} color="#fff" />
+          </TouchableOpacity>
 
-        <View style={styles.infoBox}>
-          <View style={styles.row}>
-            <Text style={styles.infoLabel}>Trainer Name</Text>
-            {/* NEW: Edit Button */}
-            <TouchableOpacity onPress={openEditModal}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.infoValue}>
+          {/* Profile Picture Circle */}
+          <TouchableOpacity onPress={handleUpdateProfilePicture}>
+            {userProfile?.profilePicture ? (
+              <Image 
+                source={{ uri: userProfile.profilePicture }} 
+                style={styles.profileImage} 
+              />
+            ) : (
+              <View style={styles.profilePlaceholder}>
+                 <MaterialCommunityIcons name="camera" size={40} color="#999" />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.trainerName}>
             {userProfile?.trainerName || 'Trainer'}
           </Text>
+          
+          <Text style={styles.trainerEmail}>{currentUser?.email}</Text>
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoLabel}>Email</Text>
-          <Text style={styles.infoValue}>{currentUser?.email}</Text>
+        {/* --- CONTENT SECTION --- */}
+        <View style={styles.contentContainer}>
+          
+          <View style={styles.statsRow}>
+            <Text style={styles.statsLabel}>Pokemon Discovered</Text>
+            <Text style={styles.statsValue}>{discoveredCount}</Text>
+          </View>
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionTitle}>Badges</Text>
+          <View style={styles.badgeGrid}>
+            {badgePlaceholders.map((_, index) => (
+              <View key={index} style={styles.badgePlaceholder} />
+            ))}
+          </View>
+
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoLabel}>Pokémon Discovered</Text>
-          <Text style={styles.infoValue}>{discoveredCount}</Text>
-        </View>
+        {/* --- 1. POPUP MENU MODAL --- */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={menuVisible}
+          onRequestClose={() => setMenuVisible(false)}
+        >
+          <TouchableOpacity 
+            style={styles.menuOverlay} 
+            activeOpacity={1} 
+            onPress={() => setMenuVisible(false)}
+          >
+            <View style={styles.menuContainer}>
+              <TouchableOpacity style={styles.menuItem} onPress={openEditModal}>
+                <Text style={styles.menuText}>Edit name</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.menuSeparator} />
+              
+              <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
+                <Text style={styles.menuText}>Sign out</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
-        <Text style={styles.todo}>[Captures Gallery grid here]</Text>
-        <Text style={styles.todo}>[Badges list here]</Text>
 
-        <TouchableOpacity
-          style={styles.signOutButton}
-          onPress={handleSignOut}>
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
-
-        {/* NEW: Edit Name Modal */}
+        {/* --- 2. EDIT NAME INPUT MODAL --- */}
         <Modal
           animationType="slide"
           transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
+          visible={editModalVisible}
+          onRequestClose={() => setEditModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Edit Trainer Name</Text>
-              
               <TextInput 
                 style={styles.input}
                 value={newName}
@@ -155,15 +241,13 @@ const ProfileScreen = () => {
                 placeholderTextColor="#999"
                 autoFocus
               />
-
               <View style={styles.modalButtons}>
                 <TouchableOpacity 
                   style={[styles.modalBtn, styles.cancelBtn]}
-                  onPress={() => setModalVisible(false)}
+                  onPress={() => setEditModalVisible(false)}
                 >
                   <Text style={styles.btnText}>Cancel</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity 
                   style={[styles.modalBtn, styles.saveBtn]}
                   onPress={handleUpdateName}
@@ -175,83 +259,152 @@ const ProfileScreen = () => {
           </View>
         </Modal>
 
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#373737ff',
-  },
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#333333', 
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#333333',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffffff',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  infoBox: {
-    backgroundColor: '#888',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerContainer: {
+    backgroundColor: '#D03844',
+    // --- 4. RESPONSIVE HEADER FIX ---
+    // Push content down based on StatusBar height
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
+    paddingBottom: 40, 
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     alignItems: 'center',
+    position: 'relative',
   },
-  infoLabel: {
+  menuIcon: {
+    position: 'absolute',
+    // Adjust top position to account for the new padding
+    top: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
+    right: 20,
+    zIndex: 10, 
+    padding: 5, 
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 15,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  profilePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#C4C4C4', 
+    marginBottom: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff', 
+  },
+  trainerName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 5,
+  },
+  trainerEmail: {
     fontSize: 14,
     color: '#e0e0e0',
   },
-  // NEW STYLES
-  editLink: {
-    color: '#81b0ff', // A nice link blue/purple
-    fontWeight: 'bold',
-    fontSize: 14,
+  contentContainer: {
+    padding: 25,
   },
-  infoValue: {
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  statsLabel: {
     fontSize: 18,
-    color: '#ffffffff',
     fontWeight: '600',
-    marginTop: 4,
+    color: '#ffffff',
   },
-  todo: {
-    fontSize: 16,
-    color: '#aaa',
-    textAlign: 'center',
-    marginVertical: 10,
+  statsValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
-  signOutButton: {
-    marginTop: 'auto', 
-    backgroundColor: '#e63946', 
-    padding: 15,
+  divider: {
+    height: 1,
+    backgroundColor: '#555555',
+    marginBottom: 25,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 20,
+  },
+  badgeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  badgePlaceholder: {
+    width: '22%',
+    aspectRatio: 1,
+    backgroundColor: '#C4C4C4',
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  menuContainer: {
+    position: 'absolute',
+    // Push the menu down so it appears below the dots
+    top: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 70,
+    right: 20,
+    backgroundColor: '#444', 
     borderRadius: 8,
+    width: 150,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
-  signOutButtonText: {
+  menuText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  // MODAL STYLES
+  menuSeparator: {
+    height: 1,
+    backgroundColor: '#666',
+    width: '100%',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -259,16 +412,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    width: '80%',
+    width: '85%',
     backgroundColor: '#fff',
     borderRadius: 15,
-    padding: 20,
+    padding: 25,
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 20,
     color: '#333',
     textAlign: 'center',
   },
@@ -276,9 +429,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 25,
     color: '#333',
   },
   modalButtons: {
@@ -287,7 +440,7 @@ const styles = StyleSheet.create({
   },
   modalBtn: {
     flex: 1,
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginHorizontal: 5,
@@ -301,6 +454,7 @@ const styles = StyleSheet.create({
   btnText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

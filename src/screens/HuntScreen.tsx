@@ -230,6 +230,7 @@ export default function HuntScreen() {
     </View>
   );
 }
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#333' },

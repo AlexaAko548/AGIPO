@@ -83,3 +83,5 @@ yarn-error.log
 
 # Google/Firebase config
 google-services.json
+.env
+.env.*

@@ -8,7 +8,6 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-// Using the singular import as per your code
 import { Camera, useCameraDevice } from "react-native-vision-camera"; 
 import { capturePokemon, PokemonData } from "../api/pokemonService";
 import { fetchPokemonList } from "../api/pokeAPI";
@@ -53,20 +52,17 @@ const ARScreen = ({ navigation, route }: any) => {
   // State to track if pokemon ran away
   const [hasFled, setHasFled] = useState(false);
 
-  // 1. FIXED: Changed type from NodeJS.Timeout to 'number' or 'any'
-  // In React Native, setTimeout returns a number ID.
+  // Timer ref
   const fleeTimeout = useRef<any>(null);
 
   // Helper to start the 10s countdown
   const startFleeTimer = () => {
-    // Clear any existing timer first
     if (fleeTimeout.current) clearTimeout(fleeTimeout.current);
 
     fleeTimeout.current = setTimeout(() => {
-      // 10 seconds passed!
       setSpawnedPokemon(null);
       setHasFled(true); 
-    }, 10000); // 10000ms = 10 seconds
+    }, 10000); 
   };
 
   useEffect(() => {
@@ -101,7 +97,6 @@ const ARScreen = ({ navigation, route }: any) => {
       }
     })();
     
-    // Cleanup timer on unmount
     return () => {
         if (fleeTimeout.current) clearTimeout(fleeTimeout.current);
     };
@@ -132,10 +127,9 @@ const ARScreen = ({ navigation, route }: any) => {
 
   function spawnSpecificPokemon(p: PokemonData) {
     const isCaught = caughtPokemonIds.has(p.id);
-    setHasFled(false); // Reset flee state
+    setHasFled(false); 
     setSpawnedPokemon({ ...p, spawnedAt: Date.now(), isCaught });
     
-    // Start the timer unless it's already caught
     if (!isCaught) startFleeTimer();
   }
 
@@ -144,20 +138,16 @@ const ARScreen = ({ navigation, route }: any) => {
     const randomPokemon = pokemonList[Math.floor(Math.random() * pokemonList.length)];
     const isCaught = caughtPokemonIds.has(randomPokemon.id);
     
-    setHasFled(false); // Reset flee state
+    setHasFled(false);
     setSpawnedPokemon({ ...randomPokemon, spawnedAt: Date.now(), isCaught });
     
-    // Start the timer
     if (!isCaught) startFleeTimer();
   }
 
   async function captureCurrentPokemon() {
-    // Stop the timer immediately when user clicks capture
     if (fleeTimeout.current) clearTimeout(fleeTimeout.current);
 
-    if (!spawnedPokemon) {
-      return;
-    }
+    if (!spawnedPokemon) return;
     
     try {
       if (camera.current) {
@@ -178,13 +168,11 @@ const ARScreen = ({ navigation, route }: any) => {
         newCaughtIds.add(spawnedPokemon.id);
         setCaughtPokemonIds(newCaughtIds);
         
-        // Mark current as caught visually
         setSpawnedPokemon(prev => prev ? { ...prev, isCaught: true } : null);
       }
     } catch (err) {
       console.error("Capture error:", err);
       Alert.alert("Error", "Failed to capture Pokémon. Try again!");
-      // If failed, restart timer
       startFleeTimer(); 
     }
   }
@@ -235,7 +223,6 @@ const ARScreen = ({ navigation, route }: any) => {
         <Text style={styles.backButtonText}>← Retreat</Text>
       </TouchableOpacity>
 
-      {/* RENDER POKEMON IF IT EXISTS AND HASN'T FLED */}
       {spawnedPokemon && !hasFled && (
         <View style={styles.pokemonContainer}>
           {spawnedPokemon.isCaught && (
@@ -278,12 +265,15 @@ const ARScreen = ({ navigation, route }: any) => {
                 <Text style={{ color: "#FF6B6B", fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
                   It ran away! 💨
                 </Text>
+                
+                {/* 1. FIXED: Button now goes BACK instead of random spawn */}
                 <TouchableOpacity 
                    style={styles.retryBtn} 
-                   onPress={() => spawnRandomPokemon(allPokemon)}
+                   onPress={() => navigation.goBack()}
                 >
                    <Text style={{ color: 'white', fontWeight: 'bold' }}>SEARCH AGAIN ↻</Text>
                 </TouchableOpacity>
+
              </View>
           ) : (
              <Text style={{ color: "#fff", fontSize: 16 }}>Scanning Area...</Text>

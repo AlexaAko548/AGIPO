@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Image,
   FlatList,
   ActivityIndicator,
-  Alert, // Import Alert
+  Alert,
 } from "react-native";
 
 import Geolocation from "@react-native-community/geolocation";
@@ -17,19 +17,16 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-// 1. Define the Navigation Types
 type RootStackParamList = {
   AR: { pokemon: { name: string; id: number } }; 
 };
 
-// Helper: sprite URL from poke id
 const getPokemonImage = (id: number) =>
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 
-// Haversine distance (meters)
 function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const R = 6371e3; // Earth radius in meters
+  const R = 6371e3; 
   const φ1 = toRad(lat1);
   const φ2 = toRad(lat2);
   const Δφ = toRad(lat2 - lat1);
@@ -50,9 +47,10 @@ export default function HuntScreen() {
   const [spawns, setSpawns] = useState<
     { name: string; id: number; latitude: number; longitude: number }[]
   >([]);
-  const [loadingLocation, setLoadingLocation] = useState(false); // New state to track loading
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
-  // Request Android permission
+  const refreshInterval = useRef<number | null>(null);
+
   const requestLocationPermission = async () => {
     try {
       if (Platform.OS === "android") {
@@ -68,7 +66,6 @@ export default function HuntScreen() {
     }
   };
 
-  // Load 100 pokemon (names + urls)
   const loadPokemonList = async () => {
     try {
       const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=100");
@@ -79,7 +76,6 @@ export default function HuntScreen() {
     }
   };
 
-  // Generate spawns around player
   const generateSpawns = (coords: { lat: number; lon: number }) => {
     if (!pokemonList || pokemonList.length === 0) return;
 
@@ -105,8 +101,6 @@ export default function HuntScreen() {
     setSpawns(result);
   };
 
-  // Get location once and generate spawns
-  // Get location once and generate spawns
   const getLocation = async () => {
     setLoadingLocation(true);
     const ok = await requestLocationPermission();
@@ -127,7 +121,6 @@ export default function HuntScreen() {
         console.log("Geolocation error:", error);
         setLoadingLocation(false);
         
-        // Custom error messages based on code
         let errorMsg = "Could not get location.";
         if (error.code === 3) errorMsg = "Location request timed out. Try moving outdoors.";
         if (error.code === 2) errorMsg = "GPS signal unavailable.";
@@ -135,11 +128,10 @@ export default function HuntScreen() {
 
         Alert.alert("GPS Error", errorMsg);
       },
-      // UPDATED OPTIONS
       { 
-        enableHighAccuracy: true, // Try 'true' for better outdoor precision, or 'false' for faster wifi/cell lock
-        timeout: 60000,           // Increased to 60 seconds (gives GPS more time to warm up)
-        maximumAge: 10000         // Accept a cached location if it's less than 10 seconds old
+        enableHighAccuracy: true, 
+        timeout: 60000,           
+        maximumAge: 10000         
       }
     );
   };
@@ -152,7 +144,31 @@ export default function HuntScreen() {
     if (pokemonList.length > 0) getLocation();
   }, [pokemonList]);
 
-  // Navigate to ARScreen when a Pokémon is clicked
+  // 2. FIXED: Safe interval setup using standard Javascript types
+  useEffect(() => {
+    if (location && pokemonList.length > 0) {
+        // Clear old timer if exists
+        if (refreshInterval.current !== null) {
+            clearInterval(refreshInterval.current);
+        }
+
+        // Start new 10s timer
+        // The 'any' cast ensures typescript doesn't complain about return types
+        refreshInterval.current = setInterval(() => {
+            console.log("Auto-refreshing spawns...");
+            generateSpawns(location);
+        }, 30000) as any;
+    }
+
+    // Cleanup when leaving screen
+    return () => {
+        if (refreshInterval.current !== null) {
+            clearInterval(refreshInterval.current);
+        }
+    };
+  }, [location, pokemonList]); 
+
+
   const handleCatchPokemon = (pokemon: { name: string; id: number }) => {
     navigation.navigate("AR", { pokemon });
   };
@@ -181,7 +197,7 @@ export default function HuntScreen() {
 
           {spawns.map((p, idx) => (
             <Marker
-              key={idx}
+              key={`${p.id}-${idx}`}
               coordinate={{ latitude: p.latitude, longitude: p.longitude }}
               title={p.name.toUpperCase()}
               onPress={() => handleCatchPokemon({ name: p.name, id: p.id })}
@@ -212,13 +228,12 @@ export default function HuntScreen() {
         <Text style={styles.buttonText}>Refresh Hunt</Text>
       </TouchableOpacity>
 
-      {/* Bottom panel */}
       <View style={styles.bottomPanel}>
         <Text style={styles.panelTitle}>Nearby Pokémon</Text>
 
         <FlatList
           data={spawns}
-          keyExtractor={(item) => `${item.id}-${item.latitude.toFixed(5)}`}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           horizontal={false}
           renderItem={({ item }) => {
             const dist = location
@@ -242,7 +257,6 @@ export default function HuntScreen() {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#333' },
@@ -286,7 +300,7 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     elevation: 10,
   },
-  panelTitle: { fontSize: 16, fontWeight: "700", marginBottom: 8, color: '#333', fontFamily: 'PokemonClassic' },
+  panelTitle: { fontSize: 14, fontWeight: "700", marginBottom: 8, color: '#333', fontFamily: 'PokemonClassic' },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -297,5 +311,5 @@ const styles = StyleSheet.create({
   pokeImg: { width: 44, height: 44 },
   pokeName: { fontSize: 12, fontWeight: "700", color: '#333', fontFamily: 'PokemonClassic' },
   pokeDist: { fontSize: 12, color: "#666" },
-  markerImg: { width: 55, height: 55 },
+  markerImg: { width: 90, height: 90 },
 });

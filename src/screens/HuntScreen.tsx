@@ -106,8 +106,9 @@ export default function HuntScreen() {
   };
 
   // Get location once and generate spawns
+  // Get location once and generate spawns
   const getLocation = async () => {
-    setLoadingLocation(true); // Start spinner
+    setLoadingLocation(true);
     const ok = await requestLocationPermission();
     if (!ok) {
       setLoadingLocation(false);
@@ -120,15 +121,26 @@ export default function HuntScreen() {
         const coords = { lat: position.coords.latitude, lon: position.coords.longitude };
         setLocation(coords);
         generateSpawns(coords);
-        setLoadingLocation(false); // Stop spinner on success
+        setLoadingLocation(false);
       },
       (error) => {
         console.log("Geolocation error:", error);
-        setLoadingLocation(false); // Stop spinner on error
-        Alert.alert("GPS Error", "Could not get your location. Try checking your GPS settings or try again.");
+        setLoadingLocation(false);
+        
+        // Custom error messages based on code
+        let errorMsg = "Could not get location.";
+        if (error.code === 3) errorMsg = "Location request timed out. Try moving outdoors.";
+        if (error.code === 2) errorMsg = "GPS signal unavailable.";
+        if (error.code === 1) errorMsg = "Location permission denied.";
+
+        Alert.alert("GPS Error", errorMsg);
       },
-      // IMPORTANT FIX: enableHighAccuracy: false is faster and works better indoors
-      { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+      // UPDATED OPTIONS
+      { 
+        enableHighAccuracy: true, // Try 'true' for better outdoor precision, or 'false' for faster wifi/cell lock
+        timeout: 60000,           // Increased to 60 seconds (gives GPS more time to warm up)
+        maximumAge: 10000         // Accept a cached location if it's less than 10 seconds old
+      }
     );
   };
 
@@ -230,7 +242,7 @@ export default function HuntScreen() {
     </View>
   );
 }
-}
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#333' },
@@ -285,5 +297,5 @@ const styles = StyleSheet.create({
   pokeImg: { width: 44, height: 44 },
   pokeName: { fontSize: 12, fontWeight: "700", color: '#333', fontFamily: 'PokemonClassic' },
   pokeDist: { fontSize: 12, color: "#666" },
-  markerImg: { width: 45, height: 45 },
+  markerImg: { width: 55, height: 55 },
 });

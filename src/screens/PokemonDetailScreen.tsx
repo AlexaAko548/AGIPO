@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     // Add extra padding for Android notch if needed
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingTop: Platform.OS === 'android' ? 15 : 20,
     paddingBottom: 10,
   },
   headerTop: {

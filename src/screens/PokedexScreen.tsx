@@ -11,10 +11,14 @@ import {
   Dimensions,
   ActivityIndicator
 } from 'react-native';
+// 1. Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchPokemonList, PokemonDetail } from '../api/pokeAPI';
 // Keep the type import, but we will bypass the function import
 import { PokemonDetail } from '../api/pokeAPI';
 
 const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 48) / 3; 
 const CARD_WIDTH = (width - 48) / 3; 
 
 export default function PokedexScreen({ navigation }: any) {
@@ -27,6 +31,33 @@ export default function PokedexScreen({ navigation }: any) {
 
   useEffect(() => {
     const loadData = async () => {
+      // 2. Try to load cached data FIRST (Offline Support)
+      try {
+        const cachedData = await AsyncStorage.getItem('POKEMON_CACHE');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          setPokemonList(parsedData);
+          setLoading(false); // Show cached content immediately
+          console.log('Loaded from Cache');
+        }
+      } catch (error) {
+        console.error('Failed to load cache', error);
+      }
+
+      // 3. Fetch fresh data from API (Online Support)
+      try {
+        const data = await fetchPokemonList();
+        if (data && data.length > 0) {
+          setPokemonList(data);
+          setLoading(false);
+          // 4. Save fresh data to storage for next time
+          await AsyncStorage.setItem('POKEMON_CACHE', JSON.stringify(data));
+          console.log('Cache Updated');
+        }
+      } catch (error) {
+        console.error('Network request failed, using cache if available.');
+        setLoading(false); // Stop spinner even if API fails
+      }
       try {
         // 1. FIXED: Fetch 100 items directly to match HuntScreen
         const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=100');
@@ -54,6 +85,7 @@ export default function PokedexScreen({ navigation }: any) {
         setLoading(false);
       }
     };
+
 
     loadData();
   }, []);
@@ -93,7 +125,7 @@ export default function PokedexScreen({ navigation }: any) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#8B2323" />
-        <Text style={{color: 'white', marginTop: 10}}>Loading Pokedex...</Text>
+        <Text style={{color: 'white', marginTop: 10, fontFamily: 'PokemonClassic'}}>Loading Pokedex...</Text>
       </View>
     );
   }
@@ -182,6 +214,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#333333', 
+    backgroundColor: '#333333', 
   },
   center: {
     justifyContent: 'center',
@@ -192,13 +225,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     paddingTop: 5, 
+    paddingTop: 5, 
   },
   headerTitle: {
+    fontFamily: 'PokemonClassic', 
+    fontSize: 20,
     fontFamily: 'PokemonClassic',
     fontSize: 20,
     color: 'white',
     marginBottom: 16,
     marginLeft: 4,
+    marginTop: 10,
     marginTop: 10,
   },
   searchContainer: {
@@ -249,6 +286,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1, 
     backgroundColor: '#333333', 
+    backgroundColor: '#333333', 
     borderRadius: 12,
     padding: 8,
     position: 'relative',
@@ -258,9 +296,11 @@ const styles = StyleSheet.create({
   },
   idText: {
     fontFamily: 'PokemonClassic',
+    fontFamily: 'PokemonClassic',
     position: 'absolute',
     top: 6,
     right: 8,
+    fontSize: 8,
     fontSize: 8,
     color: '#fff',
   },
@@ -270,10 +310,13 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   nameText: {
+    fontFamily: 'PokemonClassic', 
+    fontSize: 8,
     fontFamily: 'PokemonClassic',
     fontSize: 8,
     color: '#fff',
     textTransform: 'capitalize',
+    marginTop: 4,
     marginTop: 4,
   },
   modalOverlay: {
@@ -285,11 +328,14 @@ const styles = StyleSheet.create({
   modalContent: {
     width: 200,
     backgroundColor: '#3d3d3dff', 
+    backgroundColor: '#3d3d3dff', 
     borderRadius: 12,
     padding: 20,
     elevation: 5,
   },
   modalTitle: {
+    fontFamily: 'PokemonClassic',
+    fontSize: 12,
     fontFamily: 'PokemonClassic',
     fontSize: 12,
     marginBottom: 16,
@@ -320,6 +366,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B2323',
   },
   radioLabel: {
+    fontFamily: 'PokemonClassic',
+    fontSize: 10,
     fontFamily: 'PokemonClassic',
     fontSize: 10,
     color: '#fff',

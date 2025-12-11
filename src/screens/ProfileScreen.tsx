@@ -4,15 +4,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  ActivityIndicator,
   Modal,
   TextInput,
   ScrollView,
   Image,
-  Platform,   // <--- 1. Import Platform
-  StatusBar,  // <--- 2. Import StatusBar
+  Platform,   
+  StatusBar, 
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
@@ -54,8 +53,6 @@ const ProfileScreen = () => {
 
     return () => userRef.off('value', onValueChange);
   }, [currentUser]);
-
-  // --- ACTIONS ---
 
   const handleSignOut = async () => {
     setMenuVisible(false);
@@ -143,13 +140,10 @@ const ProfileScreen = () => {
   const badgePlaceholders = Array(8).fill(0);
 
   return (
-    // 3. Changed SafeAreaView to normal View so background color bleeds to top
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         
-        {/* --- HEADER SECTION --- */}
         <View style={styles.headerContainer}>
-          
           <TouchableOpacity 
             style={styles.menuIcon} 
             onPress={() => setMenuVisible(true)}
@@ -157,7 +151,6 @@ const ProfileScreen = () => {
              <MaterialCommunityIcons name="dots-horizontal" size={30} color="#fff" />
           </TouchableOpacity>
 
-          {/* Profile Picture Circle */}
           <TouchableOpacity onPress={handleUpdateProfilePicture}>
             {userProfile?.profilePicture ? (
               <Image 
@@ -178,9 +171,7 @@ const ProfileScreen = () => {
           <Text style={styles.trainerEmail}>{currentUser?.email}</Text>
         </View>
 
-        {/* --- CONTENT SECTION --- */}
         <View style={styles.contentContainer}>
-          
           <View style={styles.statsRow}>
             <Text style={styles.statsLabel}>Pokemon Discovered</Text>
             <Text style={styles.statsValue}>{discoveredCount}</Text>
@@ -193,10 +184,9 @@ const ProfileScreen = () => {
               <View key={index} style={styles.badgePlaceholder} />
             ))}
           </View>
-
         </View>
 
-        {/* --- 1. POPUP MENU MODAL --- */}
+        {/* POPUP MENU */}
         <Modal
           animationType="fade"
           transparent={true}
@@ -212,9 +202,7 @@ const ProfileScreen = () => {
               <TouchableOpacity style={styles.menuItem} onPress={openEditModal}>
                 <Text style={styles.menuText}>Edit name</Text>
               </TouchableOpacity>
-              
               <View style={styles.menuSeparator} />
-              
               <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
                 <Text style={styles.menuText}>Sign out</Text>
               </TouchableOpacity>
@@ -222,8 +210,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </Modal>
 
-
-        {/* --- 2. EDIT NAME INPUT MODAL --- */}
+        {/* EDIT MODAL */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -280,8 +267,6 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     backgroundColor: '#8B2323',
-    // --- 4. RESPONSIVE HEADER FIX ---
-    // Push content down based on StatusBar height
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
     paddingBottom: 40, 
     paddingHorizontal: 20,
@@ -292,8 +277,7 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     position: 'absolute',
-    // Adjust top position to account for the new padding
-    top: 20,//Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
+    top: 20,
     right: 20,
     zIndex: 10, 
     padding: 5, 
@@ -318,13 +302,14 @@ const styles = StyleSheet.create({
     borderColor: '#fff', 
   },
   trainerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 18, 
     color: '#ffffff',
     marginBottom: 5,
+    marginTop: 10,
   },
   trainerEmail: {
-    fontSize: 14,
+    fontSize: 13, // Keep readable
     color: '#e0e0e0',
   },
   contentContainer: {
@@ -337,13 +322,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   statsLabel: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 12,
     color: '#ffffff',
   },
   statsValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 12,
     color: '#ffffff',
   },
   divider: {
@@ -352,8 +337,8 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 14,
     color: '#ffffff',
     marginBottom: 20,
   },
@@ -375,7 +360,6 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    // Push the menu down so it appears below the dots
     top: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 70,
     right: 20,
     backgroundColor: '#444', 
@@ -396,9 +380,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuText: {
+    fontFamily: 'PokemonClassic', // RETRO
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 10,
   },
   menuSeparator: {
     height: 1,
@@ -419,8 +403,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 14,
     marginBottom: 20,
     color: '#333',
     textAlign: 'center',
@@ -452,9 +436,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e63946',
   },
   btnText: {
+    fontFamily: 'PokemonClassic', // RETRO
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 10,
   },
 });
 

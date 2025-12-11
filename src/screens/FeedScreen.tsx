@@ -53,7 +53,7 @@ const mockPosts: FeedPost[] = [
     pokemonName: 'Starmie',
     pokemonImage: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/121.png',
     caption: 'The gem of the sea. Water types are simply the most elegant.',
-    timestamp: Date.now() - 3600000, // 1 hour ago
+    timestamp: Date.now() - 3600000, 
     likes: 89,
   },
 ];
@@ -61,8 +61,6 @@ const mockPosts: FeedPost[] = [
 const FeedScreen = () => {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Posting State
   const [modalVisible, setModalVisible] = useState(false);
   const [myPokemonList, setMyPokemonList] = useState<MyPokemon[]>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<MyPokemon | null>(null);
@@ -71,39 +69,29 @@ const FeedScreen = () => {
 
   const currentUser = auth().currentUser;
 
-  // 1. Listen to the Global Feed
   useEffect(() => {
     const feedRef = database().ref('/public_feed').limitToLast(50);
-
     const onValueChange = feedRef.on('value', (snapshot) => {
       const data = snapshot.val();
       let realPosts: FeedPost[] = [];
-
       if (data) {
-        // Convert object to array and reverse (newest first)
         realPosts = Object.keys(data).map((key) => ({
           id: key,
           ...data[key],
         })).sort((a, b) => b.timestamp - a.timestamp);
       }
-      
-      // COMBINE: Add mock posts to the list so you can see them!
-      // (Real posts first, then static ones for this demo)
       setPosts([...realPosts, ...mockPosts]);
       setLoading(false);
     });
-
     return () => feedRef.off('value', onValueChange);
   }, []);
 
-  // 2. Fetch My Pokemon (for the "New Post" modal)
   const fetchMyPokemon = async () => {
     if (!currentUser) return;
     try {
       const snapshot = await database()
         .ref(`/users/${currentUser.uid}/discoveredPokemon`)
         .once('value');
-      
       const data = snapshot.val();
       if (data) {
         const list = Object.values(data) as MyPokemon[];
@@ -119,19 +107,15 @@ const FeedScreen = () => {
     setModalVisible(true);
   };
 
-  // 3. Handle Create Post
   const handlePost = async () => {
     if (!selectedPokemon || !currentUser) {
       Alert.alert('Select a Pokemon', 'You must choose a Pokemon to share!');
       return;
     }
-
     setPosting(true);
     try {
-      // Fetch user's name first
       const userSnap = await database().ref(`/users/${currentUser.uid}/trainerName`).once('value');
       const trainerName = userSnap.val() || 'Unknown Trainer';
-
       const newPostRef = database().ref('/public_feed').push();
       await newPostRef.set({
         trainerName,
@@ -142,7 +126,6 @@ const FeedScreen = () => {
         likes: 0,
         userId: currentUser.uid,
       });
-
       setModalVisible(false);
       setCaption('');
       setSelectedPokemon(null);
@@ -153,14 +136,12 @@ const FeedScreen = () => {
     setPosting(false);
   };
 
-  // 4. Handle Social Share (Instagram, WhatsApp, etc.)
   const onShare = async (post: FeedPost) => {
     const shareOptions = {
       title: 'PokeExplorer Discovery',
       message: `Check out this ${post.pokemonName} caught by ${post.trainerName} in PokeExplorer!`,
       url: post.pokemonImage, 
     };
-
     try {
       await Share.open(shareOptions);
     } catch (error) {
@@ -168,33 +149,25 @@ const FeedScreen = () => {
     }
   };
 
-  // --- Render Single Post ---
   const renderItem = ({ item }: { item: FeedPost }) => (
     <View style={styles.card}>
-      {/* Header */}
       <View style={styles.cardHeader}>
         <View style={styles.avatarPlaceholder} />
+        {/* Names usually look fine in default font, or you can use Retro */}
         <Text style={styles.trainerName}>{item.trainerName}</Text>
         <Text style={styles.timestamp}>
           {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
       </View>
-
-      {/* Image */}
       <Image source={{ uri: item.pokemonImage }} style={styles.cardImage} resizeMode="contain" />
-
-      {/* Actions */}
       <View style={styles.cardActions}>
         <TouchableOpacity style={styles.actionBtn}>
           <MaterialCommunityIcons name="heart-outline" size={26} color="#fff" />
         </TouchableOpacity>
-        
         <TouchableOpacity style={styles.actionBtn} onPress={() => onShare(item)}>
           <MaterialCommunityIcons name="share-variant-outline" size={26} color="#fff" />
         </TouchableOpacity>
       </View>
-
-      {/* Caption */}
       <View style={styles.cardContent}>
         <Text style={styles.postText}>
           <Text style={styles.boldText}>{item.pokemonName} </Text>
@@ -207,6 +180,7 @@ const FeedScreen = () => {
   return (
     <View style={styles.container}> 
       <View style={styles.header}>
+        {/* RETRO FONT */}
         <Text style={styles.headerTitle}>Community Feed</Text>
       </View>
 
@@ -228,7 +202,6 @@ const FeedScreen = () => {
         <MaterialCommunityIcons name="plus" size={30} color="#fff" />
       </TouchableOpacity>
 
-      {/* --- CREATE POST MODAL --- */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -301,13 +274,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#444',
-    paddingTop: 15,//Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 15 : 50,
+    paddingTop: 5,
     paddingBottom: 15,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 16,
     color: '#fff',
+    marginTop: 10,
   },
   listContent: {
     paddingBottom: 80,
@@ -397,8 +371,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: 'PokemonClassic', // RETRO
+    fontSize: 14,
     color: '#fff',
     marginBottom: 15,
     textAlign: 'center',
@@ -455,8 +429,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e63946',
   },
   btnText: {
+    fontFamily: 'PokemonClassic', // RETRO
     color: '#fff',
-    fontWeight: 'bold',
+    fontSize: 10,
   },
 });
 

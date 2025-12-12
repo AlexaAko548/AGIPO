@@ -64,7 +64,6 @@ const FeedScreen = () => {
   // 1. Listen to Feed Data
   useEffect(() => {
     const feedRef = database().ref('/public_feed').limitToLast(50);
-
     const onValueChange = feedRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -79,7 +78,6 @@ const FeedScreen = () => {
       }
       setLoading(false);
     });
-
     return () => feedRef.off('value', onValueChange);
   }, []);
 
@@ -260,6 +258,7 @@ const FeedScreen = () => {
   return (
     <View style={styles.container}> 
       <View style={styles.header}>
+        {/* RETRO FONT */}
         <Text style={styles.headerTitle}>Community Feed</Text>
       </View>
 
@@ -588,6 +587,7 @@ const styles = StyleSheet.create({
     borderColor: '#8B0000',
   },
   btnText: {
+    fontFamily: 'PokemonClassic', // RETRO
     color: '#fff',
     fontSize: 10,
     fontFamily: 'PokemonClassic',

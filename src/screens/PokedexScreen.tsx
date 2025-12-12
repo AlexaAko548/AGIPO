@@ -14,6 +14,8 @@ import {
 // 1. Import AsyncStorage
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchPokemonList, PokemonDetail } from '../api/pokeAPI';
+// // Keep the type import, but we will bypass the function import
+// import { PokemonDetail } from '../api/pokeAPI';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 3; 
@@ -55,7 +57,34 @@ export default function PokedexScreen({ navigation }: any) {
         console.error('Network request failed, using cache if available.');
         setLoading(false); // Stop spinner even if API fails
       }
+      try {
+        // 1. FIXED: Fetch 100 items directly to match HuntScreen
+        const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=100');
+        const data = await response.json();
+        
+        // 2. Map the raw results to your PokemonDetail structure
+        const formattedList: PokemonDetail[] = data.results.map((item: any) => {
+          // Extract ID from the URL (e.g., https://pokeapi.co/.../1/ -> 1)
+          const urlParts = item.url.split('/');
+          const id = parseInt(urlParts[urlParts.length - 2]);
+          
+          return {
+            id: id,
+            name: item.name,
+            // Use the standard sprite (same as Hunt Mode) or Official Artwork
+            spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+            types: [] // Types aren't in the list view API, but we don't display them on the card anyway
+          };
+        });
+
+        setPokemonList(formattedList);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to load Pokedex:", error);
+        setLoading(false);
+      }
     };
+
 
     loadData();
   }, []);
@@ -250,7 +279,7 @@ const styles = StyleSheet.create({
   cardInner: {
     width: '100%',
     aspectRatio: 1, 
-    backgroundColor: '#333333', 
+    backgroundColor: '#333333',
     borderRadius: 12,
     padding: 8,
     position: 'relative',

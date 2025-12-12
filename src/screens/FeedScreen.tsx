@@ -590,7 +590,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PokemonClassic', // RETRO
     color: '#fff',
     fontSize: 10,
-    fontFamily: 'PokemonClassic',
   },
   commentItem: {
     backgroundColor: '#333',

@@ -10,6 +10,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import PokemonDetailScreen from '../screens/PokemonDetailScreen';
 import WelcomeScreen from '../screens/WelcomeScreen'; 
+import GalleryScreen from '../screens/GalleryScreen'; 
 
 const Stack = createNativeStackNavigator();
 
@@ -61,6 +62,7 @@ export const RootNavigator = () => {
           <Stack.Group>
             <Stack.Screen name="MainApp" component={TabNavigator} />
             <Stack.Screen name="PokemonDetailScreen" component={PokemonDetailScreen} />
+            <Stack.Screen name="Gallery" component={GalleryScreen} />
           </Stack.Group>
         ) : (
           <Stack.Group>

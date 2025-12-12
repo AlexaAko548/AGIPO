@@ -1,18 +1,30 @@
-/**
- * Your main App.tsx file.
- * Its only job is to configure Google Sign-In and render the RootNavigator.
- */
-import React from 'react';
+import React, { useEffect } from 'react'; // Added useEffect
+import { LogBox } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { configureGoogleSignIn } from './src/api/authService';
+import { ConfigurePushNotifications } from './src/services/LocalPushController'; // Import it
 
-// Configure Google Sign-In on app launch
+// ... existing LogBox.ignoreLogs ...
+LogBox.ignoreLogs([
+  'This method is deprecated',
+  'Method called was',
+  'ref()',
+  'set()',
+  'onAuthStateChanged',
+  'signInWithCredential',
+  'GoogleAuthProvider',
+  'getApp',
+  'SafeAreaView has been deprecated',
+]);
+
 configureGoogleSignIn();
 
-/**
- * The main App component.
- */
 const App = () => {
+  // Initialize Notifications on App Launch
+  useEffect(() => {
+    ConfigurePushNotifications();
+  }, []);
+
   return <RootNavigator />;
 };
 

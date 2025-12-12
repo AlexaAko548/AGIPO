@@ -10,12 +10,14 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  AppState // Import AppState to check if app is in background
 } from "react-native";
 
 import Geolocation from "@react-native-community/geolocation";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LocalNotification } from '../services/LocalPushController'; // Import Notification Logic
 
 type RootStackParamList = {
   AR: { pokemon: { name: string; id: number } }; 
@@ -99,6 +101,16 @@ export default function HuntScreen() {
     }
 
     setSpawns(result);
+
+    // --- TRIGGER NOTIFICATION ---
+    // Only trigger if we found something
+    if (result.length > 0) {
+      const firstPokemon = result[0].name.toUpperCase();
+      LocalNotification(
+        "Wild Pokémon Nearby!", 
+        `A wild ${firstPokemon} and others have appeared near your location!`
+      );
+    }
   };
 
   const getLocation = async () => {
@@ -129,9 +141,9 @@ export default function HuntScreen() {
         Alert.alert("GPS Error", errorMsg);
       },
       { 
-        enableHighAccuracy: true, 
-        timeout: 60000,           
-        maximumAge: 10000         
+        enableHighAccuracy: false, // Keep false for stability
+        timeout: 15000,            
+        maximumAge: 10000 
       }
     );
   };
@@ -144,23 +156,18 @@ export default function HuntScreen() {
     if (pokemonList.length > 0) getLocation();
   }, [pokemonList]);
 
-  // 2. FIXED: Safe interval setup using standard Javascript types
   useEffect(() => {
     if (location && pokemonList.length > 0) {
-        // Clear old timer if exists
         if (refreshInterval.current !== null) {
             clearInterval(refreshInterval.current);
         }
 
-        // Start new 10s timer
-        // The 'any' cast ensures typescript doesn't complain about return types
         refreshInterval.current = setInterval(() => {
             console.log("Auto-refreshing spawns...");
             generateSpawns(location);
         }, 30000) as any;
     }
 
-    // Cleanup when leaving screen
     return () => {
         if (refreshInterval.current !== null) {
             clearInterval(refreshInterval.current);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   View,
   Text,
@@ -19,12 +19,11 @@ import database from '@react-native-firebase/database';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker'; 
 import { signOutUser } from '../api/authService';
+import { useNavigation } from '@react-navigation/native';
 
 // --- GRID MATH ---
 const { width } = Dimensions.get('window');
 const CONTAINER_PADDING = 25; 
-// We want 3 items per row. The available space is width - (padding * 2).
-// Let's leave a small gap between items (approx 2% of screen).
 const ITEM_WIDTH = (width - (CONTAINER_PADDING * 2) - 20) / 3; 
 
 type UserProfile = {
@@ -43,7 +42,20 @@ type PokemonCapture = {
   capturedAt: string;
 };
 
+// --- 1. ISOLATED COMPONENT (Fixes the crash) ---
+// By moving this outside and using memo, we prevent Android from 
+// getting confused when adding these views to the hierarchy.
+const RecentCaptureItem = memo(({ item }: { item: PokemonCapture }) => (
+  <View style={styles.gridItem}>
+    <View style={styles.gridImageContainer}>
+      <Image source={{ uri: item.imageUrl }} style={styles.gridImage} resizeMode="contain" />
+    </View>
+    <Text style={styles.gridName} numberOfLines={1}>{item.name}</Text>
+  </View>
+));
+
 const ProfileScreen = () => {
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recentCaptures, setRecentCaptures] = useState<PokemonCapture[]>([]);
@@ -69,7 +81,6 @@ const ProfileScreen = () => {
 
         if (profileData.discoveredPokemon) {
           const capturesArray: PokemonCapture[] = Object.values(profileData.discoveredPokemon);
-          // Sort by newest
           capturesArray.sort((a, b) => {
             return new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime();
           });
@@ -163,22 +174,23 @@ const ProfileScreen = () => {
   }
 
   const discoveredCount = recentCaptures.length;
-
-  // --- NEW: CALCULATE RANK LOGIC ---
-  // Rank starts at 1, and increases by 1 for every 5 Pokemon caught.
   const numericRank = Math.floor(discoveredCount / 5) + 1;
-  // Format it to look like "001", "005", "012"
   const formattedRank = String(numericRank).padStart(3, '0');
+
+  // Limit to 6 items
+  const displayCaptures = recentCaptures.slice(0, 6);
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        // 2. Disable clipping to prevent View Insertion failures
+        removeClippedSubviews={false}
+      >
         
-        {/* --- TRAINER CARD HEADER --- */}
         <View style={styles.headerBackground}>
           <View style={styles.headerCard}>
             
-            {/* ... (Menu Icon & Profile Picture code remains same) ... */}
             <TouchableOpacity 
               style={styles.menuIcon} 
               onPress={() => setMenuVisible(true)}
@@ -212,7 +224,6 @@ const ProfileScreen = () => {
                </View>
                <View style={styles.statDivider} />
                <View style={styles.statBox}>
-                  {/* UPDATED: Use the calculated formattedRank variable here */}
                   <Text style={styles.statValue}>{formattedRank}</Text>
                   <Text style={styles.statLabel}>RANK</Text>
                </View>
@@ -220,8 +231,6 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* ... (Rest of the file remains exactly the same) ... */}
-        
         <View style={styles.contentContainer}>
           <Text style={styles.sectionTitle}>Recent Captures</Text>
           
@@ -231,22 +240,26 @@ const ProfileScreen = () => {
               <Text style={styles.emptySubText}>Go to Hunt Mode to find some!</Text>
             </View>
           ) : (
-            <View style={styles.gridContainer}>
-              {/* SLICE(0, 9) ensures exactly 3x3 max */}
-              {recentCaptures.slice(0, 9).map((pokemon) => (
-                <View key={pokemon.capturedAt} style={styles.gridItem}>
-                  <View style={styles.gridImageContainer}>
-                    <Image source={{ uri: pokemon.imageUrl }} style={styles.gridImage} />
-                  </View>
-                  <Text style={styles.gridName} numberOfLines={1}>{pokemon.name}</Text>
-                </View>
-              ))}
-              
-              {/* Fillers to keep alignment if less than 3 in last row */}
-              {[...Array(3 - (recentCaptures.slice(0,9).length % 3 || 3))].map((_, i) => (
-                 <View key={`filler-${i}`} style={[styles.gridItem, {opacity: 0}]} />
-              ))}
-            </View>
+            <>
+              <View style={styles.gridContainer}>
+                {displayCaptures.map((pokemon) => (
+                  // 3. Use the memoized component here
+                  <RecentCaptureItem key={pokemon.capturedAt} item={pokemon} />
+                ))}
+                
+                {[...Array(3 - (displayCaptures.length % 3 || 3))].map((_, i) => (
+                   <View key={`filler-${i}`} style={[styles.gridItem, {opacity: 0}]} />
+                ))}
+              </View>
+
+              <TouchableOpacity 
+                style={styles.seeMoreButton}
+                onPress={() => navigation.navigate('Gallery')} 
+              >
+                <Text style={styles.seeMoreText}>See Full Gallery</Text>
+                <MaterialCommunityIcons name="arrow-right" size={16} color="#fff" />
+              </TouchableOpacity>
+            </>
           )}
         </View>
 
@@ -423,7 +436,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     marginLeft: 5,
   },
-  // --- GRID STYLES ---
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -456,6 +468,23 @@ const styles = StyleSheet.create({
     fontFamily: 'PokemonClassic',
     textAlign: 'center',
     width: '100%',
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e63946',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 2,
+    borderColor: '#8B2323',
+  },
+  seeMoreText: {
+    fontFamily: 'PokemonClassic',
+    color: '#fff',
+    fontSize: 12,
+    marginRight: 8,
   },
   emptyState: {
     alignItems: 'center',

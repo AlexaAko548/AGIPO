@@ -13,12 +13,12 @@
     <tr>
       <td align="center"><b>📍 Hunt Mode</b></td>
       <td align="center"><b>📖 Pokédex</b></td>
-      <td align="center"><b>🌍 Social Feed</b></td>
+      <td align="center"><b>🌍 Community Feed</b></td>
     </tr>
     <tr>
-      <td><img src="screenshots/hunt.png" width="200" alt="Hunt Mode" /></td>
-      <td><img src="screenshots/pokedex.png" width="200" alt="Pokedex" /></td>
-      <td><img src="screenshots/feed.png" width="200" alt="Social Feed" /></td>
+      <td><img src="src/images/hunt.png" width="200" alt="Hunt Mode" /></td>
+      <td><img src="src/images/pokedex.png" width="200" alt="Pokedex" /></td>
+      <td><img src="src/images/feed.png" width="200" alt="Social Feed" /></td>
     </tr>
   </table>
   <p><i>(Add your screenshots to a folder named <code>screenshots/</code> in your project root!)</i></p>
@@ -41,7 +41,7 @@
 * **Simulation Engine:** Logic determines spawn rarity and location.
 * **Alerts:** Get push notifications when a rare Pokémon appears nearby.
 
-### 🌐 Social Community
+### 🌐 Community Feed
 *Connect with other Trainers.*
 * **Global Feed:** Share your catches instantly.
 * **Socialize:** Like posts (with real-time counters) and leave comments.

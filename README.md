@@ -1,163 +1,163 @@
 🔴 PokeExplorer
 
-PokeExplorer is a cross-platform mobile application built with React Native (CLI) that combines a comprehensive Pokédex with location-based "Hunt" mechanics and a social feed for Trainers to share their discoveries.
+<!-- PROJECT SHIELDS -->
+
+<div align="center">
+<p><b>A location-based Social Pokédex app built for Trainers.</b></p>
+</div>
+
+📸 Gallery
+
+<div align="center">
+<table>
+<tr>
+<td align="center"><b>📍 Hunt Mode</b></td>
+<td align="center"><b>📖 Pokédex</b></td>
+<td align="center"><b>🌍 Social Feed</b></td>
+</tr>
+<tr>
+<td><img src="screenshots/hunt.png" width="200" alt="Hunt Mode" /></td>
+<td><img src="screenshots/pokedex.png" width="200" alt="Pokedex" /></td>
+<td><img src="screenshots/feed.png" width="200" alt="Social Feed" /></td>
+</tr>
+</table>
+<p><i>(Add your screenshots to a folder named <code>screenshots/</code> in your project root!)</i></p>
+</div>
 
 📱 Features
 
 🔍 Pokédex
 
-Complete Database: Fetches live data from PokeAPI.
+The ultimate encyclopedia.
 
-Search & Sort: Filter Pokémon by name or ID; Sort numerically or alphabetically.
+Live Data: Fetches continuously updated data from PokeAPI.
 
-Offline Support: Caches search results for offline viewing using AsyncStorage.
+Smart Search: Filter by Name or ID; Sort numerically or alphabetically.
 
-Detailed Views: View stats, types, height, weight, and official artwork in a clean, retro-styled card.
+Offline Capable: Caches results using AsyncStorage so you can browse without internet.
+
+Retro UI: Styled with pixel-art fonts and clean cards.
 
 📍 Hunt Mode (Geolocation)
 
-Real-time Radar: Uses Google Maps and GPS to generate random Pokémon spawns around your physical location.
+Go outside and explore.
 
-Simulation: Tap on a spawned Pokémon on the map to "capture" it.
+Real-time Radar: Uses Google Maps to simulate Pokémon spawns around you.
 
-Push Notifications: Get alerted when wild Pokémon appear nearby (using react-native-push-notification).
+Simulation Engine: Logic determines spawn rarity and location.
 
-🌐 Social Community Feed
+Alerts: Get push notifications when a rare Pokémon appears nearby.
 
-Global Feed: See captures from other users in real-time.
+🌐 Social Community
 
-Interactions: Like posts and leave comments.
+Connect with other Trainers.
 
-Social Sharing: Share your catches to Instagram, WhatsApp, or other apps via react-native-share.
+Global Feed: Share your catches instantly.
+
+Socialize: Like posts (with real-time counters) and leave comments.
+
+Share: Export your discoveries to Instagram, WhatsApp, or Discord.
 
 👤 Trainer Profile
 
-Customizable: Edit your Trainer Name and upload a Profile Picture (via Camera/Gallery).
+Identity: Customize your Trainer Name and Profile Picture.
 
-Stats & Rank: dynamic ranking system based on the number of Pokémon caught.
+Ranking System: Dynamic rank updates based on your capture count.
 
-Collection Gallery: View your personal grid of captured Pokémon.
-
-Secure Auth: Powered by Firebase Authentication (Email/Password & Google Sign-In).
+Collection: A visual grid gallery of every Pokémon you've caught.
 
 🛠 Tech Stack
 
-Core: React Native (0.76+), TypeScript
+Category
 
-Backend: Firebase Realtime Database, Firebase Authentication
+Technology
 
-Navigation: React Navigation (Native Stack & Bottom Tabs)
+Core
 
-Maps: react-native-maps (Google Maps Provider)
+React Native (CLI), TypeScript
 
-State/Storage: React Hooks, AsyncStorage
+Backend
 
-UI/Assets: react-native-vector-icons, SVG Transformer, Custom Fonts (Pokemon Classic)
+Firebase Auth, Realtime Database
 
-🚀 Getting Started
+Navigation
 
-Prerequisites
+React Navigation (Stack & Tabs)
 
-Node.js & npm
+Maps
 
-JDK 17
+react-native-maps (Google Provider)
 
-Android Studio (for Android SDK)
+Storage
 
-CocoaPods (for iOS, optional)
+AsyncStorage (Offline Data)
 
-1. Installation
+Media
 
-Clone the repository and install dependencies:
+react-native-image-picker, react-native-vector-icons
+
+🚀 Installation & Setup
+
+1. Clone & Install
 
 git clone [https://github.com/your-username/PokeExplorer.git](https://github.com/your-username/PokeExplorer.git)
 cd PokeExplorer
 npm install
 
 
-2. Configuration (Crucial Steps)
+2. Required Configuration
 
-A. Firebase Setup
+You must create a google-services.json and configure your keys for the app to launch.
 
-Create a project in the Firebase Console.
+A. Firebase
 
-Add an Android app (com.pokedex or your package name).
+Go to the Firebase Console.
 
-Download google-services.json and place it in android/app/.
+Create a project and download google-services.json.
 
-Enable Authentication (Email/Password & Google) and Realtime Database.
+Place it in: android/app/google-services.json.
 
-B. Google Maps API Key
+B. Google Maps
 
-Get an API Key from Google Cloud Console.
+Get an API Key from Google Cloud.
 
-Enable Maps SDK for Android.
-
-Add the key to android/app/src/main/AndroidManifest.xml:
+Open android/app/src/main/AndroidManifest.xml and add:
 
 <meta-data
   android:name="com.google.android.geo.API_KEY"
-  android:value="YOUR_AIzaSy_API_KEY" />
+  android:value="YOUR_API_KEY_HERE" />
 
 
-C. Custom Fonts
+3. Run the App
 
-Ensure PokemonClassic.ttf is located in android/app/src/main/assets/fonts/.
+For Android:
 
-🏃‍♂️ Running the App
-
-Android
-
-Connect your physical device (USB Debugging ON) or start an Emulator.
-
-Run the build command:
-
+# Terminal 1: Start Metro
 npx react-native start
-# In a new terminal:
+
+# Terminal 2: Build & Launch
 npx react-native run-android
 
 
-iOS (Mac Only)
+🐛 Troubleshooting
 
-cd ios
-pod install
-cd ..
-npx react-native run-ios
+Error
 
+Solution
 
-🐛 Troubleshooting & Known Issues
+Build Failed (jcenter)
 
-1. Gradle Build Fails (jcenter() or ShortcutBadger errors)
+Go to node_modules/.../build.gradle and replace jcenter() with mavenCentral().
 
-Some older libraries (react-native-push-notification, react-native-voice) use deprecated repositories.
-Fix: You may need to manually patch node_modules or ensure your android/app/build.gradle includes:
+Map Crashes
 
-dependencies {
-    implementation "me.leolin:ShortcutBadger:1.1.22@aar"
-}
+Verify your API Key in AndroidManifest.xml is correct and has Maps SDK enabled.
 
+GPS Stuck
 
-2. Map Not Loading / Crashing
+Ensure Location is ON and you are using enableHighAccuracy: false for indoors.
 
-Ensure your API Key is correct in AndroidManifest.xml.
-
-Ensure "Maps SDK for Android" is ENABLED in Google Cloud Console.
-
-Run cd android && ./gradlew clean then rebuild.
-
-3. "Failed to insert view" / UI Crashes
-
-This is related to complex lists on Android's Fabric architecture.
-Fix: We optimized FlatList in FeedScreen and PokedexScreen by removing removeClippedSubviews={true} and isolating list items into memo components.
-
-🔮 Future Roadmap
-
-Battle System: Simple rock-paper-scissors combat based on Pokémon Types.
-
-Trading: Allow users to swap captured Pokémon.
-
-AR Mode: Use the camera to overlay Pokémon on the real world (currently simulated).
-
-📜 License
-
-This project is for educational purposes. Pokémon and Pokémon character names are trademarks of Nintendo.
+<div align="center">
+<br />
+<sub>Built with ❤️ by the PokeExplorer Team</sub>
+</div>

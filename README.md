@@ -16,9 +16,9 @@
       <td align="center"><b>🌍 Community Feed</b></td>
     </tr>
     <tr>
-      <td><img src="src/images/hunt.png" width="200" alt="Hunt Mode" /></td>
-      <td><img src="src/images/pokedex.png" width="200" alt="Pokedex" /></td>
-      <td><img src="src/images/feed.png" width="200" alt="Social Feed" /></td>
+      <td><img src="src/images/hunt.jpeg" width="200" alt="Hunt Mode" /></td>
+      <td><img src="src/images/pokedex.jpeg" width="200" alt="Pokedex" /></td>
+      <td><img src="src/images/feed.jpeg" width="200" alt="Social Feed" /></td>
     </tr>
   </table>
   <p><i>(Add your screenshots to a folder named <code>screenshots/</code> in your project root!)</i></p>

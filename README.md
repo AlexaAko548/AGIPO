@@ -21,7 +21,6 @@
       <td><img src="src/images/social.jpeg" width="200" alt="Social Feed" /></td>
     </tr>
   </table>
-  <p><i>(Add your screenshots to a folder named <code>screenshots/</code> in your project root!)</i></p>
 </div>
 
 ---
